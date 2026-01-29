@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fl_chart/fl_chart.dart'; 
-import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart'; // ★カレンダー用
+import 'package:flutter_heatmap_calendar/flutter_heatmap_calendar.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +16,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Running Log',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        // ★ここを水色（Cyan）ベースに変更
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
         useMaterial3: true,
       ),
       home: const RunningHomePage(),
@@ -35,11 +36,8 @@ class _RunningHomePageState extends State<RunningHomePage> {
   List<String> _runRecords = [];
   double _totalDistance = 0.0;
   
-  // グラフ用データ
   List<double> _weeklyDistance = List.filled(7, 0.0);
   List<String> _weekLabels = [];
-  
-  // ★カレンダー用データ（日付と、その日の強さを記録）
   Map<DateTime, int> _calendarData = {};
 
   @override
@@ -66,11 +64,10 @@ class _RunningHomePageState extends State<RunningHomePage> {
     double tempTotal = 0.0;
     List<double> tempWeekly = List.filled(7, 0.0);
     List<String> tempLabels = [];
-    Map<DateTime, int> tempCalendar = {}; // カレンダー用の一時データ
+    Map<DateTime, int> tempCalendar = {};
     
     final now = DateTime.now();
     
-    // グラフのラベル作成
     for (int i = 6; i >= 0; i--) {
       final date = now.subtract(Duration(days: i));
       tempLabels.add("${date.month}/${date.day}");
@@ -86,20 +83,16 @@ class _RunningHomePageState extends State<RunningHomePage> {
 
           tempTotal += distance;
 
-          // 日付の解析
           final recordDateParts = dateStr.split('/');
           if (recordDateParts.length == 3) {
             final year = int.parse(recordDateParts[0]);
             final month = int.parse(recordDateParts[1]);
             final day = int.parse(recordDateParts[2]);
-            final recordDate = DateTime(year, month, day);
             
-            // ★カレンダー用にデータをセット（距離を四捨五入して強さにする）
-            // 同じ日に複数回走った場合は加算
             final normalizedDate = DateTime(year, month, day);
             tempCalendar[normalizedDate] = (tempCalendar[normalizedDate] ?? 0) + distance.toInt();
 
-            // グラフ用集計
+            final recordDate = DateTime(year, month, day);
             final diff = now.difference(recordDate).inDays;
             if (diff >= 0 && diff < 7) {
               int graphIndex = 6 - diff;
@@ -116,7 +109,7 @@ class _RunningHomePageState extends State<RunningHomePage> {
       _totalDistance = tempTotal;
       _weeklyDistance = tempWeekly;
       _weekLabels = tempLabels;
-      _calendarData = tempCalendar; // データ更新
+      _calendarData = tempCalendar;
     });
   }
 
@@ -179,22 +172,22 @@ class _RunningHomePageState extends State<RunningHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('MY ACTIVITY LOG', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.deepOrange,
+        title: const Text('MY RUN LOG', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        backgroundColor: Colors.cyan, // ★ヘッダーを水色に
         centerTitle: true,
       ),
-      body: SingleChildScrollView( // 画面が長くなるのでスクロール可能にする
+      body: SingleChildScrollView(
         child: Column(
           children: [
-            // ■ 1. 合計距離と棒グラフ
+            // ■ 1. 合計エリア
             Container(
               padding: const EdgeInsets.all(16),
-              color: Colors.orange.shade50,
+              color: Colors.cyan.shade50, // ★背景を薄い水色に
               child: Column(
                 children: [
                   const Text('TOTAL DISTANCE', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12)),
                   Text('${_totalDistance.toStringAsFixed(1)} km', 
-                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.deepOrange)
+                    style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Colors.cyan) // ★文字も水色
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
@@ -226,7 +219,7 @@ class _RunningHomePageState extends State<RunningHomePage> {
                             barRods: [
                               BarChartRodData(
                                 toY: entry.value,
-                                color: entry.value > 0 ? Colors.deepOrange : Colors.grey.shade300,
+                                color: entry.value > 0 ? Colors.cyan : Colors.grey.shade300, // ★棒グラフも水色
                                 width: 12,
                                 borderRadius: BorderRadius.circular(4),
                               ),
@@ -240,7 +233,7 @@ class _RunningHomePageState extends State<RunningHomePage> {
               ),
             ),
 
-            // ■ 2. ヒートマップカレンダー（NEW!）
+            // ■ 2. カレンダー
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -254,14 +247,12 @@ class _RunningHomePageState extends State<RunningHomePage> {
                     showText: false,
                     scrollable: true,
                     colorsets: const {
-                      1: Colors.deepOrange,
+                      1: Colors.cyan, // ★カレンダーの「草」も水色
                     },
-                    onClick: (value) {
-                      // 日付をタップしたときの処理（今は何もしない）
-                    },
-                    startDate: DateTime.now().subtract(const Duration(days: 60)), // 2ヶ月前から表示
-                    endDate: DateTime.now().add(const Duration(days: 14)), // 2週間先まで
-                    size: 20, // マスの大きさ
+                    onClick: (value) {},
+                    startDate: DateTime.now().subtract(const Duration(days: 60)),
+                    endDate: DateTime.now().add(const Duration(days: 14)),
+                    size: 20,
                     fontSize: 12,
                     defaultColor: Colors.grey.shade200,
                     textColor: Colors.black,
@@ -272,16 +263,16 @@ class _RunningHomePageState extends State<RunningHomePage> {
 
             const Divider(),
 
-            // ■ 3. 記録リスト
+            // ■ 3. リスト
             ListView.builder(
-              shrinkWrap: true, // ScrollViewの中でリストを使うおまじない
-              physics: const NeverScrollableScrollPhysics(), // スクロールは外側に任せる
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               itemCount: _runRecords.length,
               itemBuilder: (context, index) {
                 final record = _runRecords[index];
                 final parts = record.split(' : ');
                 return ListTile(
-                  leading: const Icon(Icons.run_circle, color: Colors.deepOrange, size: 30),
+                  leading: const Icon(Icons.run_circle, color: Colors.cyan, size: 30), // ★アイコンも水色
                   title: Text(parts.length > 1 ? parts[1] : '', style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(parts[0]),
                   trailing: IconButton(
@@ -296,7 +287,7 @@ class _RunningHomePageState extends State<RunningHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showRecordDialog(),
-        backgroundColor: const Color.fromRGBO(34, 255, 244, 0.982),
+        backgroundColor: Colors.cyan, // ★追加ボタンも水色
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
